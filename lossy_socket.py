@@ -35,6 +35,7 @@ class SimulationStats:
 sim = SimulationParams()
 stats = SimulationStats()
 
+
 class LossyUDP(socket):
     def __init__(self):
         super().__init__(AF_INET, SOCK_DGRAM)
