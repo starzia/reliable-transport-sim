@@ -49,18 +49,24 @@ class LossyUDP(socket):
         if random.random() < sim.loss_rate:
             # drop the packet
             print("outgoing UDP packet was dropped by the simulator.")
-        elif random.random() < sim.corruption_rate:
-            # corrupt the packet
-            bit_to_flip = random.randint(0, len(message) * 8 - 1)
-            byte_to_be_flipped = message[int(bit_to_flip / 8)]
-            flipped_byte = byte_to_be_flipped ^ (1 << (bit_to_flip % 8))
-            # bytes type is not mutable, but bytearray is:
-            msg_array = bytearray(message)
-            msg_array[int(bit_to_flip / 8)] = flipped_byte
-            message = bytes(msg_array)
-            print("outgoing UDP packet's bit number %d was flipped by the simulator."
-                  % bit_to_flip)
         else:
+            # flip an arbitrary number of bits in the packet:
+            bits_flipped = 0
+            for bit_to_flip in range(len(message) * 8):
+                # probability of corrupting the packet in at least one bit is ~ sim.corruption_rate
+                if random.random() < sim.corruption_rate / (len(message) * 8):
+                    bits_flipped += 1
+                    # corrupt the packet
+                    byte_to_be_flipped = message[int(bit_to_flip / 8)]
+                    flipped_byte = byte_to_be_flipped ^ (1 << (bit_to_flip % 8))
+                    # bytes type is not mutable, but bytearray is:
+                    msg_array = bytearray(message)
+                    msg_array[int(bit_to_flip / 8)] = flipped_byte
+                    message = bytes(msg_array)
+                    print("outgoing UDP packet's bit number %d was flipped by the simulator."
+                          % bit_to_flip)
+            if bits_flipped > 0:
+                print("total of %d bits flipped in the packet" % bits_flipped)
             # send message after a random delay.  The randomness will reorder packets
             Timer(random.random() * sim.max_delivery_delay,
                   lambda: super(self.__class__, self).sendto(message, dst)).start()
