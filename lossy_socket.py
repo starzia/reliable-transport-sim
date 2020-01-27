@@ -26,9 +26,11 @@ class SimulationStats:
     def __del__(self):
         # print some stats
         print("PACKETS_SENT=%d" % self.packets_sent)
+        print("UDP_BYTES_SENT=%d" % self.bytes_sent)
+        print("ETH_BYTES_SENT=%d" % (self.bytes_sent + (18+20+8) * self.packets_sent))
         print("PACKETS_RECV=%d" % self.packets_recv)
-        print("BYTES_SENT=%d" % self.bytes_sent)
-        print("BYTES_RECV=%d" % self.bytes_recv)
+        print("UDP_BYTES_RECV=%d" % self.bytes_recv)
+        print("ETH_BYTES_RECV=%d" % (self.bytes_recv + (18+20+8) * self.packets_recv))
 
 
 # global simulation parameters
