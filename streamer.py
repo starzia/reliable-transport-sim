@@ -14,7 +14,7 @@ class Streamer:
         self.dst_ip = dst_ip
         self.dst_port = dst_port
 
-    def send(self, data_bytes: bytes):
+    def send(self, data_bytes: bytes) -> None:
         """Note that data_bytes can be larger than one packet."""
         # Your code goes here!  The code below should be changed!
 
@@ -30,7 +30,7 @@ class Streamer:
         # For now, I'll just pass the full UDP payload to the app
         return data
 
-    def close(self):
+    def close(self) -> None:
         """Cleans up. It should block (wait) until the Streamer is done with all
            the necessary ACKs and retransmissions"""
         # your code goes here, especially after you add ACKs and retransmissions.
