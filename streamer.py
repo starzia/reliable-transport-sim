@@ -33,4 +33,5 @@ class Streamer:
     def close(self):
         """Cleans up. It should block (wait) until the Streamer is done with all
            the necessary ACKs and retransmissions"""
+        # your code goes here, especially after you add ACKs and retransmissions.
         pass
