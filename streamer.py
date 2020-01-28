@@ -29,3 +29,8 @@ class Streamer:
         data, addr = self.socket.recvfrom()
         # For now, I'll just pass the full UDP payload to the app
         return data
+
+    def close(self):
+        """Cleans up. It should block (wait) until the Streamer is done with all
+           the necessary ACKs and retransmissions"""
+        pass
