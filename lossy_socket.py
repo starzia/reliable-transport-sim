@@ -40,6 +40,7 @@ stats = SimulationStats()
 
 class LossyUDP(socket):
     def __init__(self):
+        self.stopped = False
         super().__init__(AF_INET, SOCK_DGRAM)
 
     def __del__(self):
@@ -83,9 +84,9 @@ class LossyUDP(socket):
                   lambda: super(self.__class__, self).sendto(message, dst)).start()
 
     def recvfrom(self, bufsize: int=2048) -> (bytes, (str, int)):
-        """Blocks until a packet is received.
+        """Blocks until a packet is received or self.stoprecv() is called.
            returns (data, (source_ip, source_port))"""
-        while True:
+        while not self.stopped:
             try:
                 data, addr = super().recvfrom(bufsize)
                 with stats.lock:
@@ -97,3 +98,7 @@ class LossyUDP(socket):
                 continue
             else:
                 return data, addr
+        return b'', ("", 0)
+
+    def stoprecv(self) -> None:
+        self.stopped = True
