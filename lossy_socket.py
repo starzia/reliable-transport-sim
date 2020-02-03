@@ -10,7 +10,7 @@ random.seed(398120)
 
 class SimulationParams:
     def __init__(self, loss_rate: float=0.0, corruption_rate: float=0.0,
-                 max_delivery_delay: float=0.0, become_reliable_after: float=1000.0):
+                 max_delivery_delay: float=0.0, become_reliable_after: float=100000.0):
         self.start_time = time()
         self.loss_rate = loss_rate
         self.corruption_rate = corruption_rate
