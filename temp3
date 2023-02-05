@@ -1,0 +1,102 @@
+# do not import anything else from loss_socket besides LossyUDP
+from lossy_socket import LossyUDP
+# do not import anything else from socket except INADDR_ANY
+from socket import INADDR_ANY
+import struct
+from collections import namedtuple
+from concurrent.futures import ThreadPoolExecutor 
+
+class Streamer:
+    def __init__(self, dst_ip, dst_port,
+                 src_ip=INADDR_ANY, src_port=0):
+        """Default values listen on all network interfaces, chooses a random source port,
+           and does not introduce any simulated packet loss."""
+        self.socket = LossyUDP()
+        self.socket.bind((src_ip, src_port))
+        self.dst_ip = dst_ip
+        self.dst_port = dst_port
+        self.src_ip = src_ip
+        self.src_port=src_port
+        self.seq_num=0
+        self.next_seq=0
+        self.buffer={}
+        executor = ThreadPoolExecutor(max_workers=1)
+        executor.submit(self.listener)
+        print("call")
+
+    def send(self, data_bytes: bytes) -> None:
+        """Note that data_bytes can be larger than one packet."""
+        # Your code goes here!  The code below should be changed!
+        num_bytes = len(data_bytes)    #databytes.len()
+        num_packets = 1
+        FIN=ACK=1
+        while num_bytes > 0:
+            
+        # for now I'm just sending the raw application-level data in one UDP payload
+            byte_section = data_bytes[(num_packets-1)*1448 : ((num_packets)*1448)]
+            length=len(byte_section)
+            content=struct.pack('i i i i i '+str(length)+'s', # Data Structure Representation #LBBHHH
+                #self.src_ip,   # Destination IP
+                #self.seq_num,    # Sequence
+                #self.tcp_ack_seq,  # Acknownlegment Sequence
+                #self.tcp_hdr_len,   # Header Length
+                #self.tcp_flags ,    # TCP Flags
+                #self.tcp_wdw,   # TCP Windows
+                #self.tcp_chksum,  # TCP cheksum
+                #self.tcp_urg_ptr # TCP Urgent Pointer
+                #byte_section
+                                ###
+                self.src_port,
+                self.dst_port,
+                self.seq_num,
+                #ack_no,
+                #packet_size,
+                FIN,
+                ACK,
+                #hush
+                byte_section                 
+            )
+            self.socket.sendto(content, (self.dst_ip, self.dst_port))
+            num_bytes = num_bytes-1472
+            num_packets += 1
+            self.seq_num+=len(byte_section)
+            
+    def listener(self):
+        
+        while not self.closed: # a later hint will explain self.closed
+            try:
+                print("called")
+                data, addr = self.socket.recvfrom()
+              # store the data in the receive buffer
+                Message=namedtuple('Message','src_port dst_port seq_num FIN ACK byte_section')
+                length=len(data)-20
+                tup=Message._make(struct.unpack('i i i i i '+str(length)+'s',data))
+                if len(tup[byte_section])==0:###???
+                    continue
+                print([tup[seq_num]])
+                self.buffer[tup[seq_num]]=tup[byte_section]
+            except Exception as e:
+                print("listener died!")
+                print(e)        
+
+    def recv(self) -> bytes:
+        """Blocks (waits) if no data is ready to be read from the connection."""
+        # your code goes here!  The code below should be changed!
+        total=b''
+        while True:
+            print("eee")
+            print(self.buffer)
+            if self.next_seq in self.buffer.keys():
+                total+=self.buffer[self.next_seq]
+                self.next_seq+=len(self.buffer[self.next_seq])
+                del self.buffer[self.next_seq]
+            else:
+                break
+        return total
+
+    def close(self) -> None:
+        """Cleans up. It should block (wait) until the Streamer is done with all
+           the necessary ACKs and retransmissions"""
+        # your code goes here, especially after you add ACKs and retransmissions.
+        self.closed = True
+        self.socket.stoprecv()
